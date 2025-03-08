@@ -1,13 +1,17 @@
-import express from 'express'
-import http from 'http'
+import express from "express";
+import http from "http";
+import DatabaseConnection from "../server/db/connect.js";
 
+// Connect to Database
+DatabaseConnection();
 
-//Server created
-const app = express()
-const server = http.createServer(app)
+// Create Server
+const app = express();
+const server = http.createServer(app);
 
-app.all('*',(req,res)=>{
-    return res.status(404).send("Oops! Page not found")
-})
+app.use(express.json());
+app.all("*", (req, res) => {
+  return res.status(404).send("Oops! Page not found");
+});
 
-export {app,server}
+export { app, server };
