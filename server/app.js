@@ -1,10 +1,5 @@
 import express from "express";
 import http from "http";
-import DatabaseConnection from "../server/db/connect.js";
-
-// Connect to Database
-DatabaseConnection();
-
 // Create Server
 const app = express();
 const server = http.createServer(app);
