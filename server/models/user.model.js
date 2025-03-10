@@ -43,9 +43,8 @@ const userSchema = new mongoose.Schema(
     forgotPasswordToken: String,
     forgotPasswordExpiry: Date,
   },
-  {
-    timestamps: true,
-  }
+     { discriminatorKey: 'role', timestamps: true }
+
 );
 
 const User = new mongoose.model("User",userSchema)
