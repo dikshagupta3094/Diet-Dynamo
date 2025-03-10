@@ -32,22 +32,23 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
     avatar:{
-      public_id:{
-          type:String
-      },
-      secure_url:{
-          type:String
-      }
+     public_id:{
+      type:String
+     },
+     secure_url:{
+      type:String
+     }
   },
     passwordChangeAt: Date,
     forgotPasswordToken: String,
     forgotPasswordExpiry: Date,
   },
-  {
+  { discriminatorKey: 'role',
     timestamps: true,
   }
 );
 
 const User = new mongoose.model("User",userSchema)
+
 
 export default User;
