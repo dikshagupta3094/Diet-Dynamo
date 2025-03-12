@@ -3,8 +3,7 @@ import Expert from "../models/expert.model.js";
 import AppError from "../utils/error.utils.js";
 import OTP from "../models/otp.model.js";
 import { v2 as cloudinary } from "cloudinary";
-import bcrypt from "bcrypt"
-import fs from 'fs'
+import fs from "fs";
 
 const register = async (req, res, next) => {
   try {
@@ -25,7 +24,7 @@ const register = async (req, res, next) => {
       return next(AppError("All fields are required", 400));
     }
 
-    // if user already exist
+    // if user/ expert already exist
     const userExist = await User.findOne({
       email,
     });
@@ -42,10 +41,11 @@ const register = async (req, res, next) => {
         new AppError("User name is already occupied! Choose another username")
       );
     }
+
     let user;
     //Role based specification
     if (role == "DIET EXPERT") {
-      if (!qualification || !description || !degree) {
+      if (!qualification || !description) {
         return next(new AppError("Please fill all the details q,d,,d", 400));
       }
       //Creating Diet expert
@@ -62,19 +62,28 @@ const register = async (req, res, next) => {
         },
         qualification,
         description,
+        degree: {
+          secure_url:""
+        },
       });
-      //Expert will upload its degree
-      if (req.files && req.files['degree']) {
-        try {
-          const result = await cloudinary.uploader.upload(req.files['degree'][0].path,{
-            folder: "Diet Dynamo/Degrees",
-          });
-          if (result) {
-            user.degree = result.degree;
-          }
 
+      //Expert will upload its degree
+      if (req.files && req.files["degree"]) {
+        try {
+          const result = await cloudinary.uploader.upload(
+            req.files["degree"][0].path,
+            {
+              folder: "Diet Dynamo",
+              resource_type:"raw"
+            }
+          );
+          if (result) {
+            user.degree.secure_url = result.secure_url;
+            await user.save();
+          }
+          console.log(result);
           // Remove file from server
-          fs.rm(`uploads/${req.file.filename}`);
+          await fs.promises.rm(req.files["degree"][0].path);
         } catch (error) {
           console.log(error);
           return next(new AppError("File not upload succesfully", 500));
@@ -114,27 +123,28 @@ await OTP.deleteMany({ email });
       return next(AppError("User registration failed, Please try again", 400));
     }
 
-    //TODO : upload user/expert avatar
-
-    if (req.files && req.files['avatar']) {
+    // upload user/expert avatar
+    if (req.files && req.files["avatar"]) {
       try {
-        const result = await cloudinary.uploader.upload(req.files['avatar'][0].path, {
-          folder: "Diet Dynamo",
-          width: 250,
-          height: 250,
-          gravity: "faces",
-          crop: "fill",
-        });
-        console.log("Result",result);
-        
+        const result = await cloudinary.uploader.upload(
+          req.files["avatar"][0].path,
+          {
+            folder: "Diet Dynamo",
+            width: 250,
+            height: 250,
+            gravity: "faces",
+            crop: "fill",
+          }
+        );
+        console.log("Result", result);
+
         if (result) {
           (user.avatar.public_id = result.public_id),
             (user.avatar.secure_url = result.secure_url);
         }
 
         // Remove file from local server
-        // fs.rm(`uploads/${req.files['avatar'][0].path}`);
-        await fs.promises.rm(req.files['avatar'][0].path);
+        await fs.promises.rm(req.files["avatar"][0].path);
       } catch (error) {
         console.log(error);
         return next(new AppError("File not upload succesfully", 500));
@@ -154,7 +164,7 @@ await OTP.deleteMany({ email });
     });
   } catch (error) {
     console.log(error);
-    
+
     res.status(400).json({
       success: false,
       message: error,
