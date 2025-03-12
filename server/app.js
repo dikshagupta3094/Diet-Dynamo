@@ -2,7 +2,7 @@ import express from "express";
 const app = express();
 import auth from "./routes/user.routes.js";
 app.use(express.json());
-
+express.urlencoded({ extended: true }) 
 app.use('/api/v1/auth',auth)
 
 app.all("*", (req, res) => {

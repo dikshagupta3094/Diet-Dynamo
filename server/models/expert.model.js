@@ -14,7 +14,9 @@ const expertSchema = new mongoose.Schema({
         trim: true
     },
     degree:{
-        type: String
+        secure_url:{
+            type:String
+        }
     }
 })
 
