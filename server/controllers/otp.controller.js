@@ -1,39 +1,43 @@
 import otpGenerator from "otp-generator";
-import OTP from "../models/otp.model";
-import User from "../models/user.model";
+import OTP from "../models/otp.model.js";
+import User from "../models/user.model.js";
+import bcrypt from "bcrypt";
+import sendVerificationEmail from "../utils/sendOTP.utils.js";
 
-export default sendOTP = async(req, res) =>{
-    const {email} = req.body;
 
-    //Check if user is already present
-    const checkUserPresent = await User.findOne({email});
-    if(checkUserPresent){
-        return res.status(401).json({
-            success: false,
-            message: "User is already registered"
-        })
-    }
+ const sendOTP = async (req, res) => {
+    try {
+        const { email } = req.body;
 
-    let otp = otpGenerator.generate(6, {
-        upperCaseAlphabets: false,
-        lowerCaseAlphabets: false,
-        specialChars: false,
-      })
+        // Check if user already registered
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(401).json({ success: false, message: "User already registered" });
+        }
 
-    let result = OTP.findOne({otp: otp});
-    while (result) {
-        otp = otpGenerator.generate(6, {
-          upperCaseAlphabets: false,
+        // Generate OTP
+        const otpValue = otpGenerator.generate(6, {
+            upperCaseAlphabets: false,
+            lowerCaseAlphabets: false,
+            specialChars: false,
         });
-        result = await OTP.findOne({ otp: otp });
-      }
 
-    let otpPayload = {email, otp};
-    let otpBody = await OTP.create(otpPayload);
-    res.status(201).json({
-        success: true,
-        message: "OTP sent Sucessfully",
-        otp
-    })
-    catch
-}
+        // Send OTP to user's email
+      
+        await sendVerificationEmail(email,otpValue);
+
+        // Hash OTP
+        const hashedOtp = await bcrypt.hash(otpValue, 10);
+
+        // Save OTP to DB
+        await OTP.create({ email, otp: hashedOtp });
+
+        res.status(201).json({ success: true, message: "OTP sent successfully" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+
+export {sendOTP}
