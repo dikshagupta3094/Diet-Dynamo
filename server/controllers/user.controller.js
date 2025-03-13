@@ -5,6 +5,11 @@ import OTP from "../models/otp.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
+const cookiesOption ={
+  maxAge: 1*24*60*60*1000,
+  httpOnly:true,
+  secure:false
+}
 //REGISTER CONTROLLER
 const register = async (req, res, next) => {
   try {
@@ -105,8 +110,6 @@ const register = async (req, res, next) => {
       });
     }
 
-  
-
     if (!user) {
       return next(
         new AppError("User registration failed, Please try again", 400)
@@ -159,21 +162,51 @@ const register = async (req, res, next) => {
   }
 };
 
-
+//EMAIL VERIFICATION CONTROLLER
 const emailVerification = async(req,res,next)=>{
-    //finding the most recent OTP for verification
-    // const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
-    // if (response.length === 0) {
-    //   return res
-    //     .status(400)
-    //     .json({ success: false, message: "No OTP found for this email" });
-    // }
-
-    // const isMatch = await bcrypt.compare(otp, response[0].otp);
-    // if (!isMatch) {
-    //   return res.status(400).json({ success: false, message: "Invalid OTP" });
-    // }
-
-    // await OTP.deleteMany({ email });
+   
 }
-export { register,emailVerification};
+
+//LOGIN CONTROLLER
+const login = async(req,res,next)=>{
+    const {email,password} = req.body;
+
+    //Check user is registered or not
+    const user = await User.findOne({email})
+      
+    if(!user){
+       return res.status(400).json({
+        success:false,
+        message:"Invalid email"
+       })
+    }
+     //Function to match user and stored passowrd in DB
+    const isMatch = await  user.comparePassword(password,user.password)
+
+    if(!isMatch){
+      return res.status(400).json({
+        success:false,
+        message:"Invalid password"
+       })
+    }
+    //check user email is verified or not
+
+    if(user.isVerified==false){
+       return next(new AppError('Your registered email is not verified, Please verify first'))
+    }
+     
+    //Token Generation
+    const token = await user.generateJWTToken()
+    console.log("Token Genrated successfully",token);
+    
+    res.cookie("token",token,cookiesOption)
+    //If all ok 
+    return res.status(200).json({
+      success:true,
+      message:"Login Successfully",
+      token,
+      user
+    })
+}
+
+export { register,emailVerification,login};
