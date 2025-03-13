@@ -5,6 +5,7 @@ import OTP from "../models/otp.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 
+//REGISTER CONTROLLER
 const register = async (req, res, next) => {
   try {
     const {
@@ -15,13 +16,13 @@ const register = async (req, res, next) => {
       role,
       qualification,
       description,
-      degree,
-      otp
+      // degree,
+      // otp,
     } = req.body;
 
     //checking all fields
-    if (!name || !email || !password || !username || !otp) {
-      return next(AppError("All fields are required", 400));
+    if (!name || !email || !password || !username) {
+      return next(new AppError("All fields are required", 400));
     }
 
     // if user/ expert already exist
@@ -46,10 +47,10 @@ const register = async (req, res, next) => {
     //Role based specification
     if (role == "DIET EXPERT") {
       if (!qualification || !description) {
-        return next(new AppError("Please fill all the details q,d,,d", 400));
+        return next(new AppError("Please fill all the details", 400));
       }
       //Creating Diet expert
-      user = await Expert.create({
+      user = new Expert({
         name,
         username,
         email,
@@ -63,7 +64,7 @@ const register = async (req, res, next) => {
         qualification,
         description,
         degree: {
-          secure_url:""
+          secure_url: "",
         },
       });
 
@@ -74,15 +75,14 @@ const register = async (req, res, next) => {
             req.files["degree"][0].path,
             {
               folder: "Diet Dynamo",
-              resource_type:"raw"
+              resource_type: "raw",
             }
           );
           if (result) {
             user.degree.secure_url = result.secure_url;
             await user.save();
           }
-          console.log(result);
-          // Remove file from server
+          // Remove file from local server
           await fs.promises.rm(req.files["degree"][0].path);
         } catch (error) {
           console.log(error);
@@ -91,7 +91,7 @@ const register = async (req, res, next) => {
       }
     } else {
       // creating new user
-      user = await User.create({
+      user = new User({
         name,
         username,
         email,
@@ -105,22 +105,12 @@ const register = async (req, res, next) => {
       });
     }
 
-    //finding the most recent OTP for verification
-    const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
-if (response.length === 0) {
-    return res.status(400).json({ success: false, message: 'No OTP found for this email' });
-}
-
-const isMatch = await bcrypt.compare(otp, response[0].otp);
-if (!isMatch) {
-    return res.status(400).json({ success: false, message: 'Invalid OTP' });
-}
-
-await OTP.deleteMany({ email });
-
+  
 
     if (!user) {
-      return next(AppError("User registration failed, Please try again", 400));
+      return next(
+        new AppError("User registration failed, Please try again", 400)
+      );
     }
 
     // upload user/expert avatar
@@ -136,8 +126,6 @@ await OTP.deleteMany({ email });
             crop: "fill",
           }
         );
-        console.log("Result", result);
-
         if (result) {
           (user.avatar.public_id = result.public_id),
             (user.avatar.secure_url = result.secure_url);
@@ -153,7 +141,6 @@ await OTP.deleteMany({ email });
 
     //save user/expert in database
     await user.save();
-
     user.password = undefined;
 
     // if all ok then send response to the user
@@ -172,4 +159,21 @@ await OTP.deleteMany({ email });
   }
 };
 
-export { register };
+
+const emailVerification = async(req,res,next)=>{
+    //finding the most recent OTP for verification
+    // const response = await OTP.find({ email }).sort({ createdAt: -1 }).limit(1);
+    // if (response.length === 0) {
+    //   return res
+    //     .status(400)
+    //     .json({ success: false, message: "No OTP found for this email" });
+    // }
+
+    // const isMatch = await bcrypt.compare(otp, response[0].otp);
+    // if (!isMatch) {
+    //   return res.status(400).json({ success: false, message: "Invalid OTP" });
+    // }
+
+    // await OTP.deleteMany({ email });
+}
+export { register,emailVerification};

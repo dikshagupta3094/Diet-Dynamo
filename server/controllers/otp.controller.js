@@ -11,8 +11,8 @@ import sendVerificationEmail from "../utils/sendOTP.utils.js";
 
         // Check if user already registered
         const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(401).json({ success: false, message: "User already registered" });
+        if (!existingUser) {
+            return res.status(401).json({ success: false, message: "First you need to registered for verification" });
         }
 
         // Generate OTP
