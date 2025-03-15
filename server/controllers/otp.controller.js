@@ -1,6 +1,6 @@
     import otpGenerator from "otp-generator";
     import OTP from "../models/otp.model.js";
-    import User from "../models/user.model.js";
+    import User from "../models/user.6model.js";
     import bcrypt from "bcrypt";
     import sendVerificationEmail from "../utils/sendOTP.utils.js";
 
@@ -40,6 +40,7 @@
             console.error(error);
             res.status(500).json({ success: false, message: "Internal Server Error" });
         }
+    
     };
 
 

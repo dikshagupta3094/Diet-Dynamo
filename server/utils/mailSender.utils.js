@@ -1,3 +1,4 @@
+
 import nodemailer from "nodemailer";
 
 const sendEmail = async(options)=>{
@@ -11,8 +12,6 @@ const sendEmail = async(options)=>{
            pass:process.env.EMAIL_PASS
        }
     })
-
-
 
 // mail options
 const mailOptions = {

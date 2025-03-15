@@ -6,7 +6,7 @@ const sendVerificationEmail = async(email, otp) =>{
          {
           email: email,
           subject: "Verification Email",
-          message: `<h1>Please confirm your OTP</h1><p>Here is your OTP code: ${otp}</p>`
+          message: `Please confirm your OTP. Here is your OTP code: ${otp}`
          }
         );
       } catch (error) {
