@@ -3,13 +3,15 @@ import Expert from "../models/expert.model.js";
 import AppError from "../utils/error.utils.js";
 import OTP from "../models/otp.model.js";
 import { v2 as cloudinary } from "cloudinary";
+import sendEmail from "../utils/mailSender.utils.js";
+import crypto from "crypto";
 import fs from "fs";
 
-const cookiesOption ={
-  maxAge: 1*24*60*60*1000,
-  httpOnly:true,
-  secure:false
-}
+const cookiesOption = {
+  maxAge: 1 * 24 * 60 * 60 * 1000,
+  httpOnly: true,
+  secure: false,
+};
 //REGISTER CONTROLLER
 const register = async (req, res, next) => {
   try {
@@ -163,50 +165,173 @@ const register = async (req, res, next) => {
 };
 
 //EMAIL VERIFICATION CONTROLLER
-const emailVerification = async(req,res,next)=>{
-   
-}
+const emailVerification = async (req, res, next) => {};
 
 //LOGIN CONTROLLER
-const login = async(req,res,next)=>{
-    const {email,password} = req.body;
+const login = async (req, res, next) => {
+  const { email, password } = req.body;
 
-    //Check user is registered or not
-    const user = await User.findOne({email})
-      
-    if(!user){
-       return res.status(400).json({
-        success:false,
-        message:"Invalid email"
-       })
+  //Check user is registered or not
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid email",
+    });
+  }
+  //Function to match user and stored passowrd in DB
+  const isMatch = await user.comparePassword(password, user.password);
+
+  if (!isMatch) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid password",
+    });
+  }
+  //check user email is verified or not
+
+  if (user.isVerified == false) {
+    return next(
+      new AppError("Your registered email is not verified, Please verify first")
+    );
+  }
+
+  //Token Generation
+  const token = await user.generateJWTToken();
+  console.log("Token Genrated successfully", token);
+
+  res.cookie("token", token, cookiesOption);
+  //If all ok
+  return res.status(200).json({
+    success: true,
+    message: "Login Successfully",
+    token,
+    user,
+  });
+};
+
+//LOGOUT CONTROLLER
+const logout = async (req, res, next) => {
+  res.cookie("token", null, {
+    maxAge: 0,
+    httpOnly: true,
+    secure: false,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "User logout successfully",
+  });
+};
+
+//FORGOT PASSWORD CONTROLLER
+const forgotPassword = async (req, res, next) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return next(new AppError("User not found"), 400);
+  }
+
+  const resetToken = await user.generateResetPassowrdToken();
+  await user.save();
+  const resetURL = `${process.env.FRONTEND_URL}/resetPassword/${resetToken}`;
+
+  const message = `we have recived reset password request please click below link to reset your password \n ${resetURL} \n This link is valid only for 15 minutes`;
+  console.log("Message>>", message);
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: "Password change request recived",
+      message,
+    });
+    res.status(200).json({
+      success: true,
+      message: "Reset password link as been send",
+    });
+  } catch (error) {
+    (user.forgotPasswordToken = undefined),
+      (user.forgotPasswordExpiry = undefined),
+      await user.save();
+    console.log(error);
+    return next(
+      new AppError(
+        "There was an error for sending reset password link! PLEASE TRY AGAIN",
+        500
+      )
+    );
+  }
+};
+
+//RESET PASSWORD CONTROLLER
+const resetPassword = async (req, res, next) => {
+  try {
+    //extract token from params
+    const { resetToken } = req.params;
+    const { password } = req.body;
+
+    //check password field is required
+    if (!password) {
+      return next(new AppError("Password is required", 400));
     }
-     //Function to match user and stored passowrd in DB
-    const isMatch = await  user.comparePassword(password,user.password)
 
-    if(!isMatch){
-      return res.status(400).json({
-        success:false,
-        message:"Invalid password"
-       })
+    //Generate forgot password token
+    const forgotPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+    const user = await User.findOne({
+      forgotPasswordToken,
+      forgotPasswordExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return next(new AppError("Token is invalid, or expired"), 400);
     }
-    //check user email is verified or not
 
-    if(user.isVerified==false){
-       return next(new AppError('Your registered email is not verified, Please verify first'))
-    }
-     
-    //Token Generation
-    const token = await user.generateJWTToken()
-    console.log("Token Genrated successfully",token);
-    
-    res.cookie("token",token,cookiesOption)
-    //If all ok 
-    return res.status(200).json({
-      success:true,
-      message:"Login Successfully",
-      token,
-      user
-    })
-}
+    user.password = await bcrypt.hash(password, 10);
+    user.forgotPasswordToken = undefined;
+    user.forgotPasswordExpiry = undefined;
+    user.passwordChangeAt = Date.now();
+    await user.save();
+    console.log(user);
+    res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Some internall error occured",
+    });
+  }
+};
 
-export { register,emailVerification,login};
+//MY PROFILE PROFILE CONTROLLER
+const myProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const user = await User.findById(userId);
+    console.log("MY PROFILE CONTROLLER HTI");
+
+    res.status(200).json({
+      success: true,
+      messgae: "profile get",
+      user,
+    });
+  } catch (error) {
+    return next(new AppError("Failed to fetch detail", 500));
+  }
+};
+
+export {
+  register,
+  emailVerification,
+  login,
+  forgotPassword,
+  resetPassword,
+  myProfile,
+  logout,
+};

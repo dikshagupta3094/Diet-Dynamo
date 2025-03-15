@@ -8,7 +8,7 @@ import sendVerificationEmail from "../utils/sendOTP.utils.js";
  const sendOTP = async (req, res) => {
     try {
         const { email } = req.body;
-
+       
         // Check if user already registered
         const existingUser = await User.findOne({ email });
         if (!existingUser) {
