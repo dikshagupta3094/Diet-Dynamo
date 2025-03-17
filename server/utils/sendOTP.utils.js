@@ -9,6 +9,7 @@ const sendVerificationEmail = async(email, otp) =>{
           message: `Please confirm your OTP. Here is your OTP code: ${otp}`
          }
         );
+       
       } catch (error) {
         console.log("Error occurred while sending email: ", error);
         throw error;

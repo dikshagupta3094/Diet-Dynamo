@@ -4,6 +4,7 @@ import AppError from "../utils/error.utils.js";
 import OTP from "../models/otp.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import sendEmail from "../utils/mailSender.utils.js";
+import bcrypt from "bcrypt";
 import crypto from "crypto";
 import fs from "fs";
 
@@ -162,11 +163,60 @@ const register = async (req, res, next) => {
       message: error,
     });
   }
-
 };
 
 //EMAIL VERIFICATION CONTROLLER
-const emailVerification = async (req, res, next) => {};
+const verifyEmail = async (req, res) => {
+  try {
+    const { otp } = req.body;
+
+    //find latest otp for email
+    const recentOTP = await OTP.findOne().sort({ created: -1 });
+
+    if (!recentOTP || !recentOTP.otp) {
+      res
+        .status(401)
+        .json({ success: false, message: "OTP not found or expired" });
+    }
+    //Convert otp into string
+    const otpString = String(otp);
+    const recentOTPString = String(recentOTP.otp);
+
+    const email = recentOTP.email;
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(401).json({ success: false, message: "User not found" });
+    }
+    // Match OTP
+    const isMatch = await bcrypt.compare(otpString, recentOTPString);
+    if (!isMatch) {
+      res.status(401).json({ success: false, message: "Invalid OTP" });
+    }
+    //check if user is already verified
+    if (user.isVerified) {
+      res
+        .status(401)
+        .json({ success: false, message: "Email is already verified" });
+    }
+    //verify user after OTP match
+    user.isVerified = true;
+    await user.save();
+
+    //delete all emails and OTP's for this user from OTP Model
+    await OTP.deleteMany({ email });
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
 //LOGIN CONTROLLER
 const login = async (req, res, next) => {
@@ -329,7 +379,7 @@ const myProfile = async (req, res, next) => {
 
 export {
   register,
-  emailVerification,
+  verifyEmail,
   login,
   forgotPassword,
   resetPassword,
