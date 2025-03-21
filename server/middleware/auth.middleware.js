@@ -1,9 +1,10 @@
 import jwt from "jsonwebtoken";
 import AppError from "../utils/error.utils.js";
-const isLoggedIn = (res, req, next) => {
+const isLoggedIn = (req,res, next) => {
   try {
-    const token = req.cookies;
-
+      const {token} = req.headers;
+      console.log("Token",token);
+      
     if (!token) {
       return next(new AppError("Unauthenticate User! PLEASE LOGIN", 400));
     }

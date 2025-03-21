@@ -166,7 +166,7 @@ const register = async (req, res, next) => {
 };
 
 //EMAIL VERIFICATION CONTROLLER
-const verifyEmail = async (req, res) => {
+const verifyEmail = async (req, res,next) => {
   try {
     const { otp } = req.body;
 
@@ -174,9 +174,7 @@ const verifyEmail = async (req, res) => {
     const recentOTP = await OTP.findOne().sort({ created: -1 });
 
     if (!recentOTP || !recentOTP.otp) {
-      res
-        .status(401)
-        .json({ success: false, message: "OTP not found or expired" });
+      return next(new AppError('OTP not found OR expried'))
     }
     //Convert otp into string
     const otpString = String(otp);
@@ -185,25 +183,26 @@ const verifyEmail = async (req, res) => {
     const email = recentOTP.email;
     const user = await User.findOne({ email });
     if (!user) {
-      res.status(401).json({ success: false, message: "User not found" });
+      return next(new AppError('User not found'))
     }
     // Match OTP
     const isMatch = await bcrypt.compare(otpString, recentOTPString);
     if (!isMatch) {
-      res.status(401).json({ success: false, message: "Invalid OTP" });
+      return next(new AppError('Invalid OTP'))
     }
     //check if user is already verified
     if (user.isVerified) {
-      res
-        .status(401)
-        .json({ success: false, message: "Email is already verified" });
+      // res
+      //   .status(401)
+      //   .json({ success: false, message: "Email is already verified" });
+       return next(new AppError('Email is already verified'))
     }
     //verify user after OTP match
     user.isVerified = true;
     await user.save();
 
     //delete all emails and OTP's for this user from OTP Model
-    await OTP.deleteMany({ email });
+    // await OTP.deleteMany({ email });
 
     res.status(200).json({
       success: true,
