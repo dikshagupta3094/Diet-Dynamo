@@ -3,7 +3,7 @@ import HomeLayout from '../Layout/HomeLayout'
 const HomePage = () => {
   return (
     <HomeLayout>
-      Home Page
+      
     </HomeLayout>
   )
 }
