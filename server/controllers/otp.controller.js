@@ -7,7 +7,7 @@
 
     const sendOTP = async (req, res) => {
         try {
-            const { email } = req.body;
+            const { email, resend = false } = req.body;
 
             // Check if user is not registered
             const existingUser = await User.findOne({ email });
@@ -16,7 +16,7 @@
             }
 
             //delete previous OTPs for this email
-            await OTP.deleteMany({email});
+            // await OTP.deleteMany({email});
 
             // Generate OTP
             const otpValue = otpGenerator.generate(6, {
@@ -28,14 +28,15 @@
             // Send OTP to user's email
         
             await sendVerificationEmail(email,otpValue);
-
+            
             // Hash OTP
             const hashedOtp = await bcrypt.hash(otpValue, 10);
 
             // Save OTP to DB
             await OTP.create({ email, otp: hashedOtp });
 
-            res.status(201).json({ success: true, message: "OTP sent successfully" });
+            const message = resend ? "OTP resent successfully" : "OTP sent successfully";
+            res.status(201).json({ success: true, message});
         } catch (error) {
             console.error(error);
             res.status(500).json({ success: false, message: "Internal Server Error" });

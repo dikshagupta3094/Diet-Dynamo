@@ -22,11 +22,11 @@ const HomeLayout = ({ children }) => {
 
   return (
     <>
-      <div className="hidden max-h-screen md:flex flex-col">
-        <div className="flex items-center justify-between shadow-xl px-5 py-5 bg-white">
+      <div className="hidden max-h-screen md:flex flex-col fixed top-0 right-0 left-0 z-1">
+        <div className="flex items-center justify-between shadow px-5 py-5 bg-white">
           <div className="flex items-center gap-5">
             <img src={Logo} alt="Image" className="h-[50px] w-[50px]" />
-            <h1 className="text-2 font-bold text-green-500">DIET DYNAMO</h1>
+            <h1 className="text-2 font-bold text-green-500 text-2xl">DIET DYNAMO</h1>
           </div>
           <ul className="flex items-center text-[18px] font-semibold px-10 gap-5 flex-wrap md:flex-nowrap">
             <li>
