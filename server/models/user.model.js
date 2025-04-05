@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["USER", "DIET EXPERT"],
+      enum: ["USER", "DIET EXPERT","ADMIN"],
       default: "USER",
     },
     isVerified: {
@@ -88,7 +88,7 @@ userSchema.methods = {
     //Generate reset psaaword token and store it in database
     this.forgotPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex')
   
-    this.forgotPasswordExpiry = Date.now()+ 15*60*1000 // 15 min from now 
+    this.forgotPasswordExpiry = Date.now() + 15*60*1000 // 15 min from now 
     
     return resetToken
    

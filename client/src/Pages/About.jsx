@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 // import Layout from '../components/Layout'
 import { Typography, Box, Button } from "@mui/material";
 import About1 from "../assets/About1.jpeg";
 import About2 from "../assets/About2.jpeg";
+import HomeLayout from "../Layout/HomeLayout";
 // import "../styles/About.css"
 
 const About = () => {
@@ -13,8 +14,9 @@ const About = () => {
   };
 
   return (
-    <>
+    <HomeLayout>
       {/* <Layout> */}
+      <div>
       <Box
         sx={{
           mb: 15,
@@ -48,7 +50,7 @@ const About = () => {
         </Typography>
 
         <div className="lg:flex mb-30">
-          <img src={About1} className="w-full lg:w-2/5" alt="" />
+          <img src={About1} className="w-full h-3/4 lg:w-2/5" alt="" />
           <div className="lg:flex-1 pl-5">
             <h4>Better Eat, Better Life</h4>
             <h2 className="text-gray-700 italic mb-2">
@@ -114,7 +116,7 @@ const About = () => {
               laudantium quibusdam repellat nobis libero at consectetur adipisci
               ipsa.
             </p>
-            <p id="more" style={{ display: isExpanded ? "block" : "none"}} className="ease-out">
+            <p id="more" style={{ display: isExpanded ? "block" : "none"}} className="ease-out" >
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Hic sunt,
               molestias dolor incidunt nemo sed voluptate libero voluptatem at
               aliquid ullam dolores maxime nostrum, ipsam voluptas placeat
@@ -133,11 +135,12 @@ const About = () => {
               {isExpanded ? "View less" : "View more"}
             </Button>
           </div>
-          <img src={About2} className="w-full md:hidden lg:block lg:w-2/5 " alt="" />
+          <img src={About2} className="hidden lg:block w-full h-3/4 lg:w-2/5 " alt="" />
         </div>
       </Box>
+      </div>
       {/* </Layout> */}
-    </>
+    </HomeLayout>
   );
 };
 

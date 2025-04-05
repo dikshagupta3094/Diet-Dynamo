@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import AppError from "../utils/error.utils.js";
 const isLoggedIn = (req,res, next) => {
   try {
-      const {token} = req.headers;
+      const {token} = req.cookies;
       console.log("Token",token);
       
     if (!token) {

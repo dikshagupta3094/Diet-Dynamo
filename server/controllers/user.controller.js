@@ -166,7 +166,7 @@ const register = async (req, res, next) => {
 };
 
 //EMAIL VERIFICATION CONTROLLER
-const verifyEmail = async (req, res,next) => {
+const verifyEmail = async (req, res, next) => {
   try {
     const { otp } = req.body;
 
@@ -174,7 +174,7 @@ const verifyEmail = async (req, res,next) => {
     const recentOTP = await OTP.findOne().sort({ created: -1 });
 
     if (!recentOTP || !recentOTP.otp) {
-      return next(new AppError('OTP not found OR expried'))
+      return next(new AppError("OTP not found OR expried"));
     }
     //Convert otp into string
     const otpString = String(otp);
@@ -183,19 +183,19 @@ const verifyEmail = async (req, res,next) => {
     const email = recentOTP.email;
     const user = await User.findOne({ email });
     if (!user) {
-      return next(new AppError('User not found'))
+      return next(new AppError("User not found"));
     }
     // Match OTP
     const isMatch = await bcrypt.compare(otpString, recentOTPString);
     if (!isMatch) {
-      return next(new AppError('Invalid OTP'))
+      return next(new AppError("Invalid OTP"));
     }
     //check if user is already verified
     if (user.isVerified) {
       // res
       //   .status(401)
       //   .json({ success: false, message: "Email is already verified" });
-       return next(new AppError('Email is already verified'))
+      return next(new AppError("Email is already verified"));
     }
     //verify user after OTP match
     user.isVerified = true;
@@ -231,7 +231,8 @@ const login = async (req, res, next) => {
     });
   }
   //Function to match user and stored passowrd in DB
-  const isMatch = await user.comparePassword(password, user.password);
+  const isMatch = await user.comparePassword(password);
+  console.log("isMatch", isMatch);
 
   if (!isMatch) {
     return res.status(400).json({
@@ -285,6 +286,8 @@ const forgotPassword = async (req, res, next) => {
   }
 
   const resetToken = await user.generateResetPassowrdToken();
+  console.log(resetToken);
+
   await user.save();
   const resetURL = `${process.env.FRONTEND_URL}/resetPassword/${resetToken}`;
 
@@ -339,13 +342,13 @@ const resetPassword = async (req, res, next) => {
     if (!user) {
       return next(new AppError("Token is invalid, or expired"), 400);
     }
-
-    user.password = await bcrypt.hash(password, 10);
+    user.password = password
     user.forgotPasswordToken = undefined;
     user.forgotPasswordExpiry = undefined;
     user.passwordChangeAt = Date.now();
+    console.log("Before saving", user.password);
     await user.save();
-    console.log(user);
+    console.log("After Saving: ", await User.findOne({ email: user.email }));
     res.status(200).json({
       success: true,
       message: "Password reset successfully",
