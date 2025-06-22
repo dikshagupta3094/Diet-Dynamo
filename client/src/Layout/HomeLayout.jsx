@@ -230,7 +230,7 @@ const HomeLayout = ({ children }) => {
 
       {children}
 
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 };

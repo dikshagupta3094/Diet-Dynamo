@@ -27,10 +27,21 @@ const register = async (req, res, next) => {
       // degree,
       // otp,
     } = req.body;
-
     //checking all fields
-    if (!name || !email || !password || !username) {
-      return next(new AppError("All fields are required", 400));
+    if (!name) {
+      return next(new AppError("Name is required", 400));
+    }
+
+    if(!email){
+      return next(new AppError("Email is required",400));
+    }
+
+    if(!password){
+      return next(new AppError("Password is required",400));
+    }
+
+    if(!username){
+      return next(new AppError("Username is required",400));
     }
 
     // if user/ expert already exist
@@ -54,8 +65,11 @@ const register = async (req, res, next) => {
     let user;
     //Role based specification
     if (role == "DIET EXPERT") {
-      if (!qualification || !description) {
-        return next(new AppError("Please fill all the details", 400));
+      if (!qualification) {
+        return next(new AppError("Please fill qualification", 400));
+      }
+       if (!description) {
+        return next(new AppError("Please fill description", 400));
       }
       //Creating Diet expert
       user = new Expert({
