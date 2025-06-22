@@ -228,7 +228,9 @@ const HomeLayout = ({ children }) => {
         </Drawer>
       </div>
 
-      {children}
+        <div className="sm:pt-0 md:py-[65px] lg:py-[80px]"> 
+        {children} 
+        </div>
 
       {/* <Footer /> */}
     </>

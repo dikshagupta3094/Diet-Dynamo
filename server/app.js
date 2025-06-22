@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import auth from "./routes/user.routes.js";
 import otp from "./routes/otp.routes.js"
+import queryRoute from "./routes/query.routes.js"
 import cookieParser from "cookie-parser";
 import cors from 'cors'
 const corsOption = {
@@ -20,6 +21,15 @@ app.use(cookieParser())
 //routes middleware
 app.use('/api/v1/auth',auth)
 app.use('/api/v1/otp', otp)
+<<<<<<< HEAD
+=======
+app.use('/api/v1/query', queryRoute)
+
+app.use(cors({
+  origin:[process.env.FRONTEND_URL],
+  credentials:true
+}))
+>>>>>>> 452f0f62db49b6ce0379f9a15d520126a02ff237
 app.all("*", (req, res) => {
   return res.status(404).send("Oops! Page not found");
 });
