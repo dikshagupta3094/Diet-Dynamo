@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    otp:{
+      type:Number
+    },
+    
     avatar: {
       public_id: {
         type: String,

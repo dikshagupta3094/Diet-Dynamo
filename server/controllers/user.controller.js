@@ -7,6 +7,7 @@ import sendEmail from "../utils/mailSender.utils.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import fs from "fs";
+import { generateAndSendOTP } from "../service/otp.service.js";
 
 const cookiesOption = {
   maxAge: 1 * 24 * 60 * 60 * 1000,
@@ -161,6 +162,7 @@ const register = async (req, res, next) => {
 
     //save user/expert in database
     await user.save();
+    await generateAndSendOTP(email);
     user.password = undefined;
 
     // if all ok then send response to the user
@@ -216,7 +218,7 @@ const verifyEmail = async (req, res, next) => {
     await user.save();
 
     //delete all emails and OTP's for this user from OTP Model
-    // await OTP.deleteMany({ email });
+    await OTP.deleteMany({ email });
 
     res.status(200).json({
       success: true,

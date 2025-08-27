@@ -1,5 +1,5 @@
 import express from "express"
-import { postQuery, viewQuery } from "../controllers/query.controller"
+import { postQuery, viewQuery } from "../controllers/query.controller.js"
 
 const router = express.Router();
 

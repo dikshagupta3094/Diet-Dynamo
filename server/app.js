@@ -21,15 +21,6 @@ app.use(cookieParser())
 //routes middleware
 app.use('/api/v1/auth',auth)
 app.use('/api/v1/otp', otp)
-<<<<<<< HEAD
-=======
-app.use('/api/v1/query', queryRoute)
-
-app.use(cors({
-  origin:[process.env.FRONTEND_URL],
-  credentials:true
-}))
->>>>>>> 452f0f62db49b6ce0379f9a15d520126a02ff237
 app.all("*", (req, res) => {
   return res.status(404).send("Oops! Page not found");
 });

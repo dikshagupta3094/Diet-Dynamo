@@ -1,7 +1,7 @@
-import Query from "../models/query.model";
-import User from "../models/user.model"
-import AppError from "../utils/error.utils";
-import sendEmail from "../utils/mailSender.utils";
+import Query from "../models/query.model.js";
+import User from "../models/user.model.js"
+import AppError from "../utils/error.utils.js";
+import sendEmail from "../utils/mailSender.utils.js";
 import mongoose from "mongoose";
 const { ObjectId } = mongoose.Types;
 
