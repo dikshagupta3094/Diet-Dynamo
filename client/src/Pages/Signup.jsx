@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import HomeLayout from "../Layout/HomeLayout";
 import { BsPersonCircle } from "react-icons/bs";
@@ -5,10 +6,12 @@ import { createAccount } from "../Redux/slice/auth.slice";
 import { useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
+
 function Signup() {
   const [previewImage, setPreviewImage] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -18,90 +21,59 @@ function Signup() {
     role: "",
     qualification: "",
     description: ""
-    //degree:null
   });
-
-  //TODO::
-  // const [degree, setDegree] = useState("");
 
   const handleuserData = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
   function getImage(e) {
-    e.preventDefault();
     const uploadImage = e.target.files[0];
-
     if (uploadImage) {
-      setFormData({
-        ...formData,
-        avatar: uploadImage,
-      });
-
+      setFormData({ ...formData, avatar: uploadImage });
       const fileReader = new FileReader();
       fileReader.readAsDataURL(uploadImage);
-      fileReader.addEventListener("load", function () {
-        // console.log(this.result);
-        setPreviewImage(this.result);
-      });
+      fileReader.onload = () => setPreviewImage(fileReader.result);
     }
   }
 
   async function createUserAccount(e) {
     e.preventDefault();
 
-    //Checking username length
-
-    if (formData.username.length<5) {
+    if (formData.username.length < 5) {
       toast.error("Username length should be more than 5");
       return;
     }
-
-    //Email Validation
     if (
       !formData.email.match(
         /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
       )
     ) {
-      toast.error("Invalid Error");
+      toast.error("Invalid Email");
       return;
     }
-    //Password validagtion
     if (
-      (!formData.password.
-      match(/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/))
+      !formData.password.match(
+        /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/
+      )
     ) {
       toast.error(
-        "Password should be 8 character long and hava a alteast one special character"
+        "Password should be 8+ characters with at least one special character"
       );
       return;
     }
 
-    //Handle formData
     const formDataToSend = new FormData();
-    formDataToSend.append("name", formData.name);
-    formDataToSend.append("username", formData.username);
-    formDataToSend.append("email", formData.email);
-    formDataToSend.append("password", formData.password);
-    formDataToSend.append("role", formData.role);
-    
-    if (formData.role == "DIET EXPERT") {
-      formDataToSend.append("qualification", formData.qualification);
-      formDataToSend.append("description", formData.description);
-      //DEGREE PART IS REMAINING
-    }
+    Object.keys(formData).forEach((key) => {
+      if (formData[key]) {
+        formDataToSend.append(key, formData[key]);
+      }
+    });
 
-    formDataToSend.append("avatar",formData.avatar)
-
-    //Dispatch createAccount action
-    const response = dispatch(createAccount(formDataToSend));
-    console.log('Frontend res', response)
+    const response = await dispatch(createAccount(formDataToSend));
     if (response?.payload?.success) {
-      navigate("/");
+      navigate("/emailverify");
     }
 
     setFormData({
@@ -112,193 +84,172 @@ function Signup() {
       role: "",
       avatar: "",
       qualification: "",
-      description: "",
+      description: ""
     });
     setPreviewImage("");
   }
+
   return (
     <HomeLayout>
-      <div className="flex items-center justify-center h-[100vh]">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
         <form
           noValidate
           onSubmit={createUserAccount}
-          className="flex flex-col justify-center gap-3 rounded-lg items-center bg-gray-50  shadow-sm m-2 p-2"
+          className="w-full max-w-lg bg-white p-6 md:p-8 rounded-2xl shadow-lg space-y-4"
         >
-          <h1 className="text-3xl font-semibold m-3">REGISTRATION PAGE</h1>
-          <label htmlFor="image_uploads" className="cursor-pointer">
-            {previewImage ? (
-              <>
-                <img
-                  className="h-24 w-24 rounded-full m-auto"
-                  src={previewImage}
-                  alt=""
-                />
-              </>
-            ) : (
-              <BsPersonCircle className="w-24 h-24" />
-            )}
-          </label>
-          <input
-            onChange={getImage}
-            type="file"
-            name="image_uploads"
-            id="image_uploads"
-            accept=".jpg,.jpeg,.svg,.png"
-            className="hidden"
-          />
+          <h1 className="text-3xl font-bold text-center text-gray-800">
+            Create Your Account
+          </h1>
 
-          <div className="flex flex-col w-80">
-            <label htmlFor="name" className="font-semibold p-1 m-1">
-              Name:
+          {/* Avatar Upload */}
+          <div className="flex justify-center">
+            <label htmlFor="image_uploads" className="cursor-pointer group">
+              {previewImage ? (
+                <img
+                  className="h-24 w-24 rounded-full border-4 border-green-400 object-cover shadow-md group-hover:opacity-80 transition"
+                  src={previewImage}
+                  alt="Preview"
+                />
+              ) : (
+                <BsPersonCircle className="w-24 h-24 text-gray-400 group-hover:text-green-500 transition" />
+              )}
             </label>
+            <input
+              onChange={getImage}
+              type="file"
+              id="image_uploads"
+              accept=".jpg,.jpeg,.png"
+              className="hidden"
+            />
+          </div>
+
+          {/* Name */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">Name</label>
             <input
               type="text"
               name="name"
-              id="name"
               placeholder="Enter your name"
-              className="border-black h-7"
               value={formData.name}
               onChange={handleuserData}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
             />
+          </div>
 
-            <label htmlFor="username" className="font-semibold p-1 m-1">
-              Username:
+          {/* Username */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">
+              Username
             </label>
             <input
               type="text"
               name="username"
-              id="username"
-              placeholder="Enter your username"
-              className="border-black h-7"
+              placeholder="Choose a username"
               value={formData.username}
               onChange={handleuserData}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
             />
+          </div>
 
-            <label htmlFor="username" className="font-semibold p-1 m-1">
-              Email:
-            </label>
+          {/* Email */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">Email</label>
             <input
               type="email"
               name="email"
-              id="email"
               placeholder="Enter your email"
-              className="border-black h-7"
               value={formData.email}
               onChange={handleuserData}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
             />
-            <label htmlFor="password" className="font-semibold p-1 m-1">
-              Password:
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-1">
+              Password
             </label>
             <input
               type="password"
               name="password"
-              id="password"
               placeholder="Enter your password"
-              className="border-black h-7"
               value={formData.password}
               onChange={handleuserData}
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
             />
+          </div>
 
-            <div className="mb-4">
-              <label htmlFor="role" className="block font-semibold mb-2">
-                Select Role:
-              </label>
-
-              <div className="flex gap-6 items-center p-2">
-                <div className="flex items-center gap-2">
+          {/* Role */}
+          <div>
+            <label className="block font-medium text-gray-700 mb-2">
+              Select Role
+            </label>
+            <div className="flex gap-6">
+              {["DIET EXPERT", "USER"].map((role) => (
+                <label key={role} className="flex items-center gap-2">
                   <input
                     type="radio"
                     name="role"
-                    id="DIET EXPERT"
-                    value="DIET EXPERT"
-                    checked={formData.role === "DIET EXPERT"}
+                    value={role}
+                    checked={formData.role === role}
                     onChange={(e) =>
                       setFormData({ ...formData, role: e.target.value })
                     }
-                    className="accent-blue-600 w-4 h-4"
+                    className="accent-green-500"
                   />
-                  <label
-                    htmlFor="DIET EXPERT"
-                    className="text-lg font-medium text-gray-700"
-                  >
-                    Expert
-                  </label>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="role"
-                    id="USER"
-                    value="USER"
-                    checked={formData.role === "USER"}
-                    onChange={(e) =>
-                      setFormData({ ...formData, role: e.target.value })
-                    }
-                    className="accent-blue-600 w-4 h-4"
-                  />
-                  <label
-                    htmlFor="USER"
-                    className="text-lg font-medium text-gray-700"
-                  >
-                    User
-                  </label>
-                </div>
-              </div>
+                  {role === "DIET EXPERT" ? "Expert" : "User"}
+                </label>
+              ))}
             </div>
+          </div>
 
-            {formData.role == "DIET EXPERT" && (
-              <>
-                <label
-                  htmlFor="qualification"
-                  className="font-semibold p-1 m-1"
-                >
+          {/* Extra fields for Experts */}
+          {formData.role === "DIET EXPERT" && (
+            <>
+              <div>
+                <label className="block font-medium text-gray-700 mb-1">
                   Qualification
                 </label>
                 <input
                   type="text"
                   name="qualification"
-                  id="qualification"
                   placeholder="Enter your qualification"
                   value={formData.qualification}
                   onChange={handleuserData}
-                ></input>
-                <label htmlFor="Description" className="font-semibold p-1 m-1">
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-medium text-gray-700 mb-1">
                   Description
                 </label>
                 <textarea
                   name="description"
-                  id="description"
-                  rows={5}
-                  cols={5}
-                  placeholder="Enter about yourself ex- you can write about your experience"
+                  rows={4}
+                  placeholder="Write about your experience"
                   value={formData.description}
                   onChange={handleuserData}
+                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-400 outline-none resize-none"
                 ></textarea>
+              </div>
+            </>
+          )}
 
-                {/* DEGREE:TODO */}
-                {/* <label
-                  htmlFor="qualification"
-                  className="font-semibold p-1 m-1"
-                >
-                  Qualification
-                </label>
-                <input
-                  type="text"
-                  name="qualification"
-                  id="qualification"
-                  placeholder="Enter your qualification"
-                ></input> */}
-              </>
-            )}
-          </div>
-          <button className="bg-green-500 text-white  text-xl m-2 p-2 rounded-xl w-full cursor-pointer">
+          {/* Submit */}
+          <button
+            type="submit"
+            className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold text-lg transition cursor-pointer"
+          >
             Create Account
           </button>
 
-          <p className="text-center">
-             Already have account?  
-             <Link to={"/login"} className="text-blue-600"> Login</Link>
+          {/* Login Link */}
+          <p className="text-center text-gray-600">
+            Already have an account?{" "}
+            <Link to="/login" className="text-green-600 font-semibold">
+              Login
+            </Link>
           </p>
         </form>
       </div>

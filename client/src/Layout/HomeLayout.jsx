@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Footer from "../Components/Footer.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import Logo from "../assets/Diet.png";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import Drawer from "@mui/joy/Drawer";
@@ -14,11 +14,20 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import Typography from "@mui/joy/Typography";
 import ModalClose from "@mui/joy/ModalClose";
 import { GiHamburgerMenu } from "react-icons/gi";
+import { logout } from "../Redux/slice/auth.slice.js";
 const HomeLayout = ({ children }) => {
   const isLoggedIn = useSelector((state) => state?.auth?.isLoggedIn);
+  console.log("isLoggedIn",isLoggedIn);
+  
   const role = useSelector((state) => state?.auth?.role);
-
+  const navigate = useNavigate()
+  const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
+  const handleLogout = (e)=>{
+     e.preventDefault();
+    const res = dispatch(logout());
+    if(res?.payload?.success) navigate("/")
+  }
 
   return (
     <>
@@ -88,8 +97,9 @@ const HomeLayout = ({ children }) => {
                   </button>
                 </li>
                 <li>
-                  <button className="bg-green-500 px-3 py-1 rounded-xl text-white hover:bg-blue-500">
-                    <NavLink to={"/logout"}>Logout</NavLink>
+                  <button className="bg-green-500 px-3 py-1 rounded-xl text-white hover:bg-blue-500"
+                  onClick={handleLogout}>  
+                  Logout
                   </button>
                 </li>
               </div>
@@ -202,13 +212,9 @@ const HomeLayout = ({ children }) => {
                         My Profile
                       </NavLink>
                     </button>
-                    <button className="w-full py-2 rounded-xl bg-green-500 text-white ml-2">
-                      <NavLink
-                        to={"/logout"}
-                        className="text-[18px] font-semibold"
-                      >
-                        Logout
-                      </NavLink>
+                    <button className="w-full py-2 rounded-xl bg-green-500 text-white ml-2 text-[18px] font-semibold"
+                    onClick={handleLogout}>
+                      Logout
                     </button>
                   </>
                 )}
@@ -232,7 +238,7 @@ const HomeLayout = ({ children }) => {
         {children} 
         </div>
 
-      {/* <Footer /> */}
+      <Footer />
     </>
   );
 };

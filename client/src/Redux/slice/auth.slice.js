@@ -1,66 +1,160 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import axiosInstance from "../../Helpers/axiosInstance";
 
-const initialState = {
-  isLoggedIn: JSON.parse(localStorage.getItem("isLoggedIn")) == true||false,
-  data: JSON.parse(localStorage.getItem("data"))|| {},
-  role :JSON.parse(localStorage.getItem("role"))||"",
+const safeJSONParse = (value, fallback) => {
+  try {
+    return value ? JSON.parse(value) : fallback;
+  } catch (error) {
+    return fallback;
+  }
 };
 
-export const createAccount =
-  createAsyncThunk('/signUp',
-  async (data) => {
-    try {
-      const res = axiosInstance.post(
-        "auth/register",
-        data
-      );
-      console.log("Data Inside redux slice",res);
-     
-      toast.promise(res, {
-        loading: "Wait, creating you account",
-        success: (data) => {
-          return data?.data?.message;
-        },
-        error: "Failed to create account",
-      });
-      console.log("RES Inside redux slice",res);
-      return res?.data;
-    } catch (error) {
-      toast.error(error?.response?.data?.message);
-    }
-  });
+const initialState = {
+  otpId: safeJSONParse(localStorage.getItem("otpId"), null),
+  registeredEmail: safeJSONParse(localStorage.getItem("registeredEmail"), null),
+  isLoggedIn: safeJSONParse(localStorage.getItem("isLoggedIn"), false),
+  data: safeJSONParse(localStorage.getItem("data"), {}),
+  role: safeJSONParse(localStorage.getItem("role"), ""),
+};
 
-  export const Login = createAsyncThunk("auth/login",async(data)=>{
-    try {
-      const res = axiosInstance.post("auth/login",data)
+export const createAccount = createAsyncThunk("/signUp", async (data) => {
+  try {
+    const res = axiosInstance.post("auth/register", data);
+    toast.promise(res, {
+      loading: "Wait, creating you account",
+      success: (data) => {
+        return data?.data?.message;
+      },
+      error: "Failed to create account",
+    });
+    return (await res)?.data;
+  } catch (error) {
+    toast.error(error?.response?.data?.message);
+  }
+});
 
-      toast.promise(res,{
-       loading:'Login in progress',
-       success:(data)=>{
-         return data?.data?.message
-       },
-       error:"Failed to login,Please try again"
-      })
-      return (await res)?.data
+export const LoginUser = createAsyncThunk("/login", async (data,{rejectWithValue}) => {
+  try {
+    const res = axiosInstance.post("auth/login", data);
+    toast.promise(res, {
+      loading: "Login in progress",
+      success: (data) => {
+        return data?.data?.message;
+      },
+      error: "Failed to login,Please try again",
+    });
+    return (await res)?.data;
+  } catch (error) {
+    toast.error(error?.res?.data?.message);
+    return rejectWithValue(error?.response?.data)
+  }
+});
+
+export const OTP = createAsyncThunk(
+  "/emailverify",
+  async ({ otp, otpId }, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.post("auth/verifyEmail", { otp, otpId });
+      // toast.promise(res, {
+      //   loading: "Please wait",
+      //   success: (data) => {
+      //     return data?.data?.message;
+      //   },
+      //   error: "Invalid otp, Please try again",
+      // });
+      toast.success(res?.data?.message)
+      return res.data;
     } catch (error) {
-      toast.error(error?.res?.data?.message)
+      toast.error(error?.res?.data?.message || "Error occurred try again");
+      return rejectWithValue({ success: false, message });
     }
-  })
+  }
+);
+
+export const resendOTP = createAsyncThunk("/resendOTP", async ({ email }) => {
+  try {
+    const res = await axiosInstance.post("otp/resend-otp", {
+      email,
+      resend: true,
+    });
+    // toast.promise(res, {
+    //   loading: "Please wait",
+    //   success: (data) => {
+    //     return data?.data?.message;
+    //   },
+    //   error: "Invalid otp, Please try again",
+    // });
+    toast.success(res?.data?.message)
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    toast.error(error?.res?.data?.message || "Error occurred try again");
+  }
+});
+
+export const logout = createAsyncThunk("/logout", async () => {
+  try {
+    const res = axiosInstance.get("auth/logout");
+    console.log(res);
+
+    toast.promise(res, {
+      loading: "Wait, Logout in Progress",
+      success: (data) => {
+        return data?.data?.message;
+      },
+      error: "Failed to Logout",
+    });
+    return (await res).data;
+  } catch (error) {
+    toast.error(error?.response?.data?.message);
+  }
+});
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  reducers: {},
+  reducers: {
+    clearAuthState: (state) => {
+      state.otpId = null;
+      state.registeredEmail = null;
+    },
+  },
   extraReducers: (builder) => {
-    builder.addCase(Login.fulfilled,(state, action)=>{
-      localStorage.setItem("data",JSON.stringify(action?.payload?.user))
-      localStorage.setItem("role",JSON.stringify(action?.payload?.user?.role))
-      localStorage.setItem("isLoggedIn","true")
-      state.isLoggedIn= true,
-      state.data = action?.payload?.user,
-      state.role = action?.payload?.user?.role
+    builder.addCase(createAccount.fulfilled, (state, action) => {
+      const email = action?.payload?.user?.email;
+      state.registeredEmail = email;
+      state.otpId = action?.payload?.otpId;
+
+      localStorage.setItem("registeredEmail", JSON.stringify(email));
+      localStorage.setItem("otpId", JSON.stringify(action?.payload?.otpId));
     });
+    builder.addCase(LoginUser.fulfilled, (state, action) => {
+      localStorage.setItem("data", JSON.stringify(action?.payload?.user));
+      localStorage.setItem("role", JSON.stringify(action?.payload?.user?.role));
+      localStorage.setItem("isLoggedIn", "true");
+      (state.isLoggedIn = true),
+        (state.data = action?.payload?.user),
+        (state.role = action?.payload?.user?.role);
+    });
+    builder.addCase(LoginUser.rejected, (state, action) => {
+      state.isLoggedIn = false;
+      state.data = {};
+      state.role = "";
+    });
+    builder.addCase(resendOTP.fulfilled, (state, action) => {
+      state.otpId = action.payload.otpId;
+    });
+
+    builder.addCase(logout.fulfilled, (state) => {
+      localStorage.clear();
+      state.isLoggedIn = false;
+      state.data = {};
+      state.role = "";
+    });
+    // builder.addCase(resendOTP.rejected,(state,action)=>{
+    //   state.otpId = null;
+    // })
   },
 });
 
