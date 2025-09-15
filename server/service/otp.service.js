@@ -19,7 +19,9 @@ export const generateAndSendOTP = async (email) => {
 
   // hash & save
   const hashedOtp = await bcrypt.hash(otpValue, 10);
-  await OTP.create({ email, otp: hashedOtp });
+  const otpRecord = await OTP.create({ email, otp: hashedOtp,
+    expiresAt: Date.now() + 10 * 60 * 1000,//otp expire in 10 minutes
+  });
 
-  return true;
+  return otpRecord._id;
 };

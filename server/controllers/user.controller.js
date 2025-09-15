@@ -162,14 +162,15 @@ const register = async (req, res, next) => {
 
     //save user/expert in database
     await user.save();
-    await generateAndSendOTP(email);
+    const otpId = await generateAndSendOTP(email);
     user.password = undefined;
 
     // if all ok then send response to the user
     res.status(201).json({
       success: true,
-      message: "Register successfully",
+      message: "Mail has been sent to your registered email, Please verify it",
       user,
+      otpId
     });
   } catch (error) {
     console.log(error);
@@ -184,12 +185,14 @@ const register = async (req, res, next) => {
 //EMAIL VERIFICATION CONTROLLER
 const verifyEmail = async (req, res, next) => {
   try {
-    const { otp } = req.body;
-
+    const { otpId, otp } = req.body;
+    console.log("OTPID",otpId);
+    console.log("OTP",otp)
     //find latest otp for email
-    const recentOTP = await OTP.findOne().sort({ created: -1 });
-
-    if (!recentOTP || !recentOTP.otp) {
+    const recentOTP = await OTP.findById(otpId)
+    console.log("RECENTOTP ",recentOTP);
+    
+    if (!recentOTP || recentOTP.expiresAt<Date.now()) {
       return next(new AppError("OTP not found OR expried"));
     }
     //Convert otp into string
