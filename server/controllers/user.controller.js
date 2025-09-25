@@ -33,16 +33,16 @@ const register = async (req, res, next) => {
       return next(new AppError("Name is required", 400));
     }
 
-    if(!email){
-      return next(new AppError("Email is required",400));
+    if (!email) {
+      return next(new AppError("Email is required", 400));
     }
 
-    if(!password){
-      return next(new AppError("Password is required",400));
+    if (!password) {
+      return next(new AppError("Password is required", 400));
     }
 
-    if(!username){
-      return next(new AppError("Username is required",400));
+    if (!username) {
+      return next(new AppError("Username is required", 400));
     }
 
     // if user/ expert already exist
@@ -69,7 +69,7 @@ const register = async (req, res, next) => {
       if (!qualification) {
         return next(new AppError("Please fill qualification", 400));
       }
-       if (!description) {
+      if (!description) {
         return next(new AppError("Please fill description", 400));
       }
       //Creating Diet expert
@@ -170,7 +170,7 @@ const register = async (req, res, next) => {
       success: true,
       message: "Mail has been sent to your registered email, Please verify it",
       user,
-      otpId
+      otpId,
     });
   } catch (error) {
     console.log(error);
@@ -186,13 +186,13 @@ const register = async (req, res, next) => {
 const verifyEmail = async (req, res, next) => {
   try {
     const { otpId, otp } = req.body;
-    console.log("OTPID",otpId);
-    console.log("OTP",otp)
+    console.log("OTPID", otpId);
+    console.log("OTP", otp);
     //find latest otp for email
-    const recentOTP = await OTP.findById(otpId)
-    console.log("RECENTOTP ",recentOTP);
-    
-    if (!recentOTP || recentOTP.expiresAt<Date.now()) {
+    const recentOTP = await OTP.findById(otpId);
+    console.log("RECENTOTP ", recentOTP);
+
+    if (!recentOTP || recentOTP.expiresAt < Date.now()) {
       return next(new AppError("OTP not found OR expried"));
     }
     //Convert otp into string
@@ -361,7 +361,7 @@ const resetPassword = async (req, res, next) => {
     if (!user) {
       return next(new AppError("Token is invalid, or expired"), 400);
     }
-    user.password = password
+    user.password = password;
     user.forgotPasswordToken = undefined;
     user.forgotPasswordExpiry = undefined;
     user.passwordChangeAt = Date.now();
@@ -397,6 +397,25 @@ const myProfile = async (req, res, next) => {
     return next(new AppError("Failed to fetch detail", 500));
   }
 };
+// FETCH ALL DIET EXPERT
+const getAllExpert = async (req, res, next) => {
+  try {
+    const getExpert = await User.find({ role: "DIET EXPERT" });
+    const getExpertId = getExpert.map((expert) => expert._id);
+    res.status(200).json({
+      success: true,
+      message: "Expert Data",
+      ExpertId: getExpertId,
+      data: getExpert,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
 
 export {
   register,
@@ -406,4 +425,5 @@ export {
   resetPassword,
   myProfile,
   logout,
+  getAllExpert,
 };
