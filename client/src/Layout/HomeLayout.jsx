@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Footer from "../Components/Footer.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import Logo from "../assets/Diet.png";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import {NavLink, useNavigate } from "react-router-dom";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import Drawer from "@mui/joy/Drawer";
@@ -11,22 +11,24 @@ import DialogContent from "@mui/joy/DialogContent";
 import List from "@mui/joy/List";
 import ListItem from "@mui/joy/ListItem";
 import ListItemButton from "@mui/joy/ListItemButton";
-import Typography from "@mui/joy/Typography";
 import ModalClose from "@mui/joy/ModalClose";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { logout } from "../Redux/slice/auth.slice.js";
 const HomeLayout = ({ children }) => {
   const isLoggedIn = useSelector((state) => state?.auth?.isLoggedIn);
   console.log("isLoggedIn",isLoggedIn);
-  
+
   const role = useSelector((state) => state?.auth?.role);
   const navigate = useNavigate()
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
-  const handleLogout = (e)=>{
+  const handleLogout = async(e)=>{
      e.preventDefault();
-    const res = dispatch(logout());
-    if(res?.payload?.success) navigate("/")
+    const res = await dispatch(logout());
+    console.log("Logout res", res);   
+    if(res?.payload?.success){
+      navigate("/")
+    }
   }
 
   return (

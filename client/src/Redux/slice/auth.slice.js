@@ -95,17 +95,10 @@ export const resendOTP = createAsyncThunk("/resendOTP", async ({ email }) => {
 
 export const logout = createAsyncThunk("/logout", async () => {
   try {
-    const res = axiosInstance.get("auth/logout");
+    const res = await axiosInstance.get("auth/logout");
     console.log(res);
-
-    toast.promise(res, {
-      loading: "Wait, Logout in Progress",
-      success: (data) => {
-        return data?.data?.message;
-      },
-      error: "Failed to Logout",
-    });
-    return (await res).data;
+     toast.success(res?.data?.message||"Logout successfully")
+    return res.data;
   } catch (error) {
     toast.error(error?.response?.data?.message);
   }
@@ -158,5 +151,5 @@ const authSlice = createSlice({
   },
 });
 
-export const {} = authSlice.actions;
+export const {clearAuthState} = authSlice.actions;
 export default authSlice.reducer;
