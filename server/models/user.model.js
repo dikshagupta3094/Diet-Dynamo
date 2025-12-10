@@ -36,7 +36,25 @@ const userSchema = new mongoose.Schema(
     otp:{
       type:Number
     },
-    
+    // ********//
+    isSubscribed:{
+      type:Boolean,
+      default:false
+    },
+    susbscriptionStatus:{
+       type:String,
+       default:"inactive" // active
+    },
+    stripeCutomerId:{
+       type:String
+    },
+    stripeSubscriptionId:{
+      type:String
+    },
+    currentPeriodEnd:{
+      type:Date
+    },
+   // ********//
     avatar: {
       public_id: {
         type: String,
