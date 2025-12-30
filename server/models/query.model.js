@@ -13,7 +13,7 @@ const querySchema = new mongoose.Schema(
       required: true,
     },
     title:{
-        type:[String],
+        type:String,
         required:true
     },
     description: {

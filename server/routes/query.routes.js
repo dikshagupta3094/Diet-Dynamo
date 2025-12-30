@@ -1,9 +1,9 @@
 import express from "express"
 import { postQuery, viewQuery } from "../controllers/query.controller.js"
+import {isLoggedIn} from "../middleware/auth.middleware.js"
+const query = express.Router();
 
-const router = express.Router();
+query.post('/postQuery/:expertId',isLoggedIn, postQuery);
+query.get('/viewQuery',isLoggedIn, viewQuery);
 
-router.post('/postQuery', postQuery);
-router.get('/viewQuery', viewQuery);
-
-export default router;
+export default query;

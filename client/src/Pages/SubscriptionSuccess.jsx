@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { verifySubscription } from "../Redux/slice/payment.slice.js";
+import { verifySubscription,fetchSubscriptionStatus } from "../Redux/slice/payment.slice.js";
 import { useSearchParams,useNavigate } from "react-router-dom";
 
 const SubscriptionSuccess = () => {
@@ -16,10 +16,11 @@ const SubscriptionSuccess = () => {
       const action = await dispatch(verifySubscription(sessionId));
 
       if (action.meta.requestStatus === "fulfilled") {
+       await dispatch(fetchSubscriptionStatus());
         navigate("/expert");
       }
     })();
-  }, []);
+  }, [dispatch,navigate,params]);
   return (
     <div>
       <h1>Payment Successful</h1>

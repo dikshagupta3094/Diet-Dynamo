@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import auth from "./routes/user.routes.js";
 import otp from "./routes/otp.routes.js"
-import queryRoute from "./routes/query.routes.js"
+import query from "./routes/query.routes.js"
 import payment from "./routes/payment.routes.js"
 import cookieParser from "cookie-parser";
 import cors from 'cors'
@@ -25,6 +25,7 @@ app.use(cookieParser())
 app.use('/api/v1/auth',auth)
 app.use('/api/v1/otp', otp)
 app.use('/api/v1/payments',payment)
+app.use('/api/v1/query',query)
 app.all("*", (req, res) => {
   return res.status(404).send("Oops! Page not found");
 });

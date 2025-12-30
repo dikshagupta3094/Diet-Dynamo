@@ -6,8 +6,19 @@ import Login from "./Pages/Login.jsx";
 import EmailVerification from "./Pages/EmailVerification.jsx";
 import OurExpert from "./Pages/OurExpert.jsx";
 import SubscriptionSuccess from "./Pages/SubscriptionSuccess.jsx";
+import PostQuery from "./Pages/PostQuery.jsx";
+import {useEffect} from "react";
+import { fetchSubscriptionStatus } from "./Redux/slice/payment.slice.js";
+import { useDispatch, useSelector } from "react-redux";
 
 function App() {
+    const dispatch = useDispatch();
+    const isLoggedIn = useSelector((state)=>state.auth.isLoggedIn)
+    useEffect(()=>{
+      if(isLoggedIn){
+        dispatch(fetchSubscriptionStatus());
+      }
+    },[dispatch,isLoggedIn]);
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
@@ -17,6 +28,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/expert" element={<OurExpert />} />
       <Route path="/subscription-success" element={<SubscriptionSuccess />} />
+      <Route path="/postquery/:_id" element={<PostQuery/>}/>
     </Routes>
   );
 }
